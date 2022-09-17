@@ -131,7 +131,8 @@ func startOfLine() {
 }
 
 func displayLineno() {
-	clearBanner()
+	move(50, height)
+	fmt.Print("            ")
 	move(50, height)
 	fmt.Printf("%d - %d", 1+textX, 1+lineno)
 	restore()
