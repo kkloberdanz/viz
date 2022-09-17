@@ -9,14 +9,15 @@ import (
 	"os"
 )
 
-var screenX int = 0
-var screenY int = 0
+var screenX int = 1
+var screenY int = 1
 var width int = 0
 var height int = 0
 var quit bool = false
 var filename string
 var top *line
 var bottom *line
+var currentLine *line
 
 const (
 	ENTER_CODE = 13
@@ -61,13 +62,17 @@ func right() {
 }
 
 func up() {
-	screenY--
+	if screenY > 0 {
+		screenY--
+		currentLine = currentLine.prev
+	}
 	restore()
 }
 
 func down() {
 	if screenY < height {
 		screenY++
+		currentLine = currentLine.next
 	}
 	restore()
 }
@@ -76,6 +81,11 @@ func left() {
 	if screenX > 0 {
 		screenX--
 	}
+	restore()
+}
+
+func startOfLine() {
+	screenX = 1
 	restore()
 }
 
@@ -98,8 +108,25 @@ func insert() {
 		switch c {
 		case ESC_CODE:
 			return
+		case ENTER_CODE:
+			return // TODO: insert a new line
 		default:
-			fmt.Printf("%c", c)
+			// add character to string at proper position
+			pos := screenX
+			if pos > 0 {
+				pos--
+			}
+			txt := currentLine.text
+			currentLine.text = fmt.Sprintf(
+				"%s%c%s",
+				txt[:pos],
+				c,
+				txt[pos:],
+			)
+			move(0, screenY)
+			fmt.Printf(currentLine.text)
+			restore()
+			right()
 		}
 	}
 }
@@ -152,11 +179,29 @@ func writeFile() {
 	flash(fmt.Sprintf("wrote file: \"%s\"", filename))
 }
 
+func displayLine(line string, y int) {
+	move(0, y)
+	fmt.Print(line)
+	restore()
+}
+
+func draw() {
+	i := 0
+	for line := top; line != nil; line = line.next {
+		if i >= height {
+			break
+		}
+		displayLine(line.text, i)
+		i++
+	}
+}
+
 func scan() {
 	for {
 		if quit {
 			return
 		}
+		draw()
 		c := getchar()
 		switch c {
 		case 'l':
@@ -172,8 +217,7 @@ func scan() {
 		case ':':
 			command()
 		case '0':
-			screenX = 0
-			restore()
+			startOfLine()
 		}
 	}
 }
@@ -214,8 +258,10 @@ func readFile(filename string) {
 		line := lineNew()
 		line.text = fileScanner.Text()
 		lines.next = line
+		line.prev = lines
 		lines = lines.next
 	}
+	currentLine = top.next
 }
 
 func main() {
