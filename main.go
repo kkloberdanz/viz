@@ -112,10 +112,7 @@ func insert() {
 			return // TODO: insert a new line
 		default:
 			// add character to string at proper position
-			pos := screenX
-			if pos > 0 {
-				pos--
-			}
+			pos := screenX - 1
 			txt := currentLine.text
 			currentLine.text = fmt.Sprintf(
 				"%s%c%s",
@@ -123,9 +120,7 @@ func insert() {
 				c,
 				txt[pos:],
 			)
-			move(0, screenY)
-			fmt.Printf(currentLine.text)
-			restore()
+			displayLine(currentLine.text, screenY)
 			right()
 		}
 	}
@@ -218,6 +213,8 @@ func scan() {
 			command()
 		case '0':
 			startOfLine()
+		default:
+			flash(fmt.Sprintf("unknown command: '%c'", c))
 		}
 	}
 }
@@ -230,11 +227,17 @@ func eventLoop() error {
 		return err
 	}
 
-	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
+	oldIn, err := term.MakeRaw(int(os.Stdin.Fd()))
 	if err != nil {
 		return err
 	}
-	defer term.Restore(int(os.Stdin.Fd()), oldState)
+	defer term.Restore(int(os.Stdin.Fd()), oldIn)
+
+	oldOut, err := term.MakeRaw(int(os.Stdout.Fd()))
+	if err != nil {
+		return err
+	}
+	defer term.Restore(int(os.Stdout.Fd()), oldOut)
 
 	clear()
 	move(screenX, screenY)
