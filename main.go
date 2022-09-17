@@ -272,6 +272,9 @@ func min(a int, b int) int {
 
 func setXPos() {
 	screenX = 1
+	if currentLine == nil {
+		return
+	}
 	for i := 0; i < min(textX, len(currentLine.text)); i++ {
 		c := currentLine.text[i]
 		if c == '\t' {
