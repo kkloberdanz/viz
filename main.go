@@ -11,6 +11,8 @@ import (
 
 var screenX int = 1
 var screenY int = 1
+var textX int = 0
+var textY int = 0
 var width int = 0
 var height int = 0
 var quit bool = false
@@ -38,6 +40,15 @@ func lineNew() *line {
 	}
 }
 
+func walkBack() {
+	if textX > 0 {
+		textX--
+	}
+	if screenX > 1 {
+		screenX--
+	}
+}
+
 func restore() {
 	move(screenX, screenY)
 }
@@ -56,9 +67,32 @@ func move(x int, y int) {
 	fmt.Print(cursor.MoveTo(y, x))
 }
 
+func left() {
+	if currentLine != nil {
+		if textX > 0 {
+			textX--
+			if currentLine.text[textX] == '\t' {
+				screenX -= 8
+			} else {
+				screenX--
+			}
+			restore()
+		}
+	}
+}
+
 func right() {
-	screenX++
-	restore()
+	if currentLine != nil {
+		if textX < len(currentLine.text)-1 {
+			textX++
+			if currentLine.text[textX] == '\t' {
+				screenX += 8
+			} else {
+				screenX++
+			}
+			restore()
+		}
+	}
 }
 
 func up() {
@@ -77,15 +111,9 @@ func down() {
 	restore()
 }
 
-func left() {
-	if screenX > 0 {
-		screenX--
-	}
-	restore()
-}
-
 func startOfLine() {
 	screenX = 1
+	textX = 0
 	restore()
 }
 
@@ -107,19 +135,26 @@ func insert() {
 		c := getchar()
 		switch c {
 		case ESC_CODE:
+			walkBack()
 			return
 		case ENTER_CODE:
 			return // TODO: insert a new line
 		default:
 			// add character to string at proper position
-			pos := screenX - 1
+			pos := textX
 			txt := currentLine.text
-			currentLine.text = fmt.Sprintf(
-				"%s%c%s",
-				txt[:pos],
-				c,
-				txt[pos:],
-			)
+			if pos == len(currentLine.text) {
+				currentLine.text = fmt.Sprintf("%s%c", txt, c)
+				textX++
+				screenX++
+			} else {
+				currentLine.text = fmt.Sprintf(
+					"%s%c%s",
+					txt[:pos],
+					c,
+					txt[pos:],
+				)
+			}
 			displayLine(currentLine.text, screenY)
 			right()
 		}
@@ -208,6 +243,10 @@ func scan() {
 		case 'k':
 			up()
 		case 'i':
+			insert()
+		case 'A':
+			textX = len(currentLine.text)
+			screenX = textX + 1
 			insert()
 		case ':':
 			command()
