@@ -19,7 +19,6 @@ var quit bool = false
 var filename string
 var top *line
 var topOfScreen *line
-var bottom *line
 var currentLine *line
 
 const (
@@ -72,11 +71,7 @@ func left() {
 	if currentLine != nil {
 		if textX > 0 {
 			textX--
-			if currentLine.text[textX] == '\t' {
-				screenX -= 8
-			} else {
-				screenX--
-			}
+			screenX--
 			restore()
 		}
 	}
@@ -86,11 +81,7 @@ func right() {
 	if currentLine != nil {
 		if textX < len(currentLine.text)-1 {
 			textX++
-			if currentLine.text[textX] == '\t' {
-				screenX += 8
-			} else {
-				screenX++
-			}
+			screenX++
 			restore()
 		}
 	}
@@ -111,6 +102,9 @@ func up() {
 }
 
 func down() {
+	if currentLine.next == nil {
+		return
+	}
 	if screenY < height-1 {
 		screenY++
 		currentLine = currentLine.next
@@ -160,7 +154,21 @@ func insert() {
 			walkBack()
 			return
 		case ENTER_CODE:
-			return // TODO: insert a new line
+			prevText := currentLine.text[textX:]
+			nextText := currentLine.text[:textX]
+			startOfLine()
+
+			newLine := lineNew()
+
+			newLine.next = currentLine
+			newLine.prev = currentLine.prev
+			newLine.text = nextText
+			currentLine.text = prevText
+			currentLine.prev.next = newLine
+			currentLine.prev = newLine
+			currentLine = newLine
+			down()
+			draw()
 		default:
 			// add character to string at proper position
 			pos := textX
@@ -233,6 +241,8 @@ func writeFile() {
 
 func displayLine(line string, y int) {
 	move(1, y)
+	fmt.Print("                                                           ")
+	move(1, y)
 	fmt.Print(line)
 	restore()
 }
@@ -246,6 +256,30 @@ func draw() {
 		displayLine(line.text, i)
 		i++
 	}
+
+	for ; i < height; i++ {
+		displayLine("~", i)
+	}
+}
+
+func min(a int, b int) int {
+	if a < b {
+		return a
+	} else {
+		return b
+	}
+}
+
+func setXPos() {
+	screenX = 1
+	for i := 0; i < min(textX, len(currentLine.text)); i++ {
+		c := currentLine.text[i]
+		if c == '\t' {
+			screenX += 8
+		} else {
+			screenX++
+		}
+	}
 }
 
 func scan() {
@@ -255,7 +289,9 @@ func scan() {
 		}
 		draw()
 		displayLineno()
+
 		c := getchar()
+
 		switch c {
 		case 'l':
 			right()
@@ -269,15 +305,18 @@ func scan() {
 			insert()
 		case 'A':
 			textX = len(currentLine.text)
-			screenX = textX + 1
+			setXPos()
 			insert()
 		case ':':
 			command()
 		case '0':
 			startOfLine()
+		case ESC_CODE:
+			break // do nothing
 		default:
 			flash(fmt.Sprintf("unknown command: '%c'", c))
 		}
+		setXPos()
 	}
 }
 
