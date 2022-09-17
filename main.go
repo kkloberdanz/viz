@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/ahmetalpbalkan/go-cursor"
 	"golang.org/x/crypto/ssh/terminal"
@@ -13,6 +14,28 @@ var screenY int = 0
 var width int = 0
 var height int = 0
 var quit bool = false
+var filename string
+var top *line
+var bottom *line
+
+const (
+	ENTER_CODE = 13
+	ESC_CODE   = 27
+)
+
+type line struct {
+	text string
+	prev *line
+	next *line
+}
+
+func lineNew() *line {
+	return &line{
+		text: "",
+		prev: nil,
+		next: nil,
+	}
+}
 
 func restore() {
 	move(screenX, screenY)
@@ -67,12 +90,13 @@ func clearBanner() {
 }
 
 func insert() {
+	clearBanner()
 	flash("-- INSERT --")
 	defer clearBanner()
 	for {
 		c := getchar()
 		switch c {
-		case 27:
+		case ESC_CODE:
 			return
 		default:
 			fmt.Printf("%c", c)
@@ -81,29 +105,30 @@ func insert() {
 }
 
 func execute(cmd string) {
-    for _, c := range cmd[1:] {
+	for _, c := range cmd[1:] {
 		switch c {
 		case 'w':
 			writeFile()
 		case 'q':
 			quit = true
-        default:
-            flash(fmt.Sprintf("unknown command: '%c'", c))
-            return
+		default:
+			flash(fmt.Sprintf("unknown command: '%c'", c))
+			return
 		}
 	}
 }
 
 func command() {
+	clearBanner()
 	cmd := ":"
 	for {
 		flash(cmd)
 		c := getchar()
 		switch c {
-		case 13:
+		case ENTER_CODE:
 			execute(cmd)
 			return
-		case 27:
+		case ESC_CODE:
 			clearBanner()
 			return
 		default:
@@ -113,7 +138,18 @@ func command() {
 }
 
 func writeFile() {
-	flash("wrote file")
+	file, err := os.Create(filename)
+	if err != nil {
+		flash(fmt.Sprintf("failed to write: \"%s\": %v", filename, err))
+		return
+	}
+	defer file.Close()
+
+	for line := top.next; line != nil; line = line.next {
+		file.Write([]byte(line.text))
+		file.Write([]byte("\n"))
+	}
+	flash(fmt.Sprintf("wrote file: \"%s\"", filename))
 }
 
 func scan() {
@@ -135,8 +171,9 @@ func scan() {
 			insert()
 		case ':':
 			command()
-		case 'q':
-			return
+		case '0':
+			screenX = 0
+			restore()
 		}
 	}
 }
@@ -161,9 +198,34 @@ func eventLoop() error {
 	return nil
 }
 
+func readFile(filename string) {
+	readFile, err := os.Open(filename)
+	if err != nil {
+		return // file does not exist, so we'll create a new one
+	}
+	defer readFile.Close()
+
+	top = lineNew()
+	lines := top
+
+	fileScanner := bufio.NewScanner(readFile)
+	fileScanner.Split(bufio.ScanLines)
+	for fileScanner.Scan() {
+		line := lineNew()
+		line.text = fileScanner.Text()
+		lines.next = line
+		lines = lines.next
+	}
+}
+
 func main() {
+	if len(os.Args) > 1 {
+		filename = os.Args[1]
+		readFile(filename)
+	}
 	err := eventLoop()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
+		return
 	}
 }
