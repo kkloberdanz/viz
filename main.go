@@ -12,12 +12,13 @@ import (
 var screenX int = 1
 var screenY int = 1
 var textX int = 0
-var textY int = 0
+var lineno int = 0
 var width int = 0
 var height int = 0
 var quit bool = false
 var filename string
 var top *line
+var topOfScreen *line
 var bottom *line
 var currentLine *line
 
@@ -96,17 +97,29 @@ func right() {
 }
 
 func up() {
-	if screenY > 0 {
+	if screenY > 1 {
 		screenY--
 		currentLine = currentLine.prev
+		lineno--
+	} else if topOfScreen.prev != nil {
+		clear()
+		topOfScreen = topOfScreen.prev
+		currentLine = currentLine.prev
+		lineno--
 	}
 	restore()
 }
 
 func down() {
-	if screenY < height {
+	if screenY < height-1 {
 		screenY++
 		currentLine = currentLine.next
+		lineno++
+	} else {
+		clear()
+		topOfScreen = topOfScreen.next
+		currentLine = currentLine.next
+		lineno++
 	}
 	restore()
 }
@@ -117,14 +130,22 @@ func startOfLine() {
 	restore()
 }
 
+func displayLineno() {
+	clearBanner()
+	move(50, height)
+	fmt.Printf("%d - %d", 1+textX, 1+lineno)
+	restore()
+}
+
 func flash(msg string) {
-	move(0, height)
+	move(1, height)
 	fmt.Print(msg)
 	restore()
 }
 
 func clearBanner() {
 	flash("                                                               ")
+	restore()
 }
 
 func insert() {
@@ -210,14 +231,14 @@ func writeFile() {
 }
 
 func displayLine(line string, y int) {
-	move(0, y)
+	move(1, y)
 	fmt.Print(line)
 	restore()
 }
 
 func draw() {
 	i := 0
-	for line := top; line != nil; line = line.next {
+	for line := topOfScreen; line != nil; line = line.next {
 		if i >= height {
 			break
 		}
@@ -232,6 +253,7 @@ func scan() {
 			return
 		}
 		draw()
+		displayLineno()
 		c := getchar()
 		switch c {
 		case 'l':
@@ -304,6 +326,7 @@ func readFile(filename string) {
 		lines = lines.next
 	}
 	currentLine = top.next
+	topOfScreen = top
 }
 
 func main() {
