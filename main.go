@@ -593,6 +593,36 @@ func scan() {
 				char,
 				txt[textX+1:],
 			)
+		case 'w':
+			if len(currentLine.text) == 0 {
+				down()
+				break
+			}
+			ch := currentLine.text[textX]
+			if ch == ' ' || ch == '\t' {
+				for _, char := range currentLine.text[textX:] {
+					right()
+					if char != ' ' && char != '\t' {
+						break
+					}
+					if textX >= len(currentLine.text)-1 || len(currentLine.text) == 0 {
+						down()
+						startOfLine()
+					}
+				}
+				left()
+			} else {
+				for _, char := range currentLine.text[textX:] {
+					right()
+					if char == ' ' || char == '\t' {
+						break
+					}
+					if textX >= len(currentLine.text)-1 || len(currentLine.text) == 0 {
+						down()
+						startOfLine()
+					}
+				}
+			}
 		case 'p':
 			oldNext := currentLine.next
 			newline := lineNew()
