@@ -272,6 +272,19 @@ func executeSearch(term string) {
 }
 
 func search() {
+	oldScreenX := screenX
+	oldScreenY := screenY
+
+	defer func() {
+		screenX = oldScreenX
+	}()
+	defer func() {
+		screenY = oldScreenY
+	}()
+
+	screenY = height
+	screenX = 2
+
 	clearBanner()
 	term := "/"
 	for {
@@ -285,8 +298,16 @@ func search() {
 		case ESCAPE_CODE:
 			clearBanner()
 			return
+		case BACKSPACE_CODE:
+			term = term[:len(term)-1]
+			screenX--
+			clearBanner()
+			if screenX == 1 {
+				return
+			}
 		default:
 			term += string(c)
+			screenX++
 		}
 	}
 }
@@ -333,6 +354,18 @@ func execute(cmd string) {
 }
 
 func command() {
+	oldScreenX := screenX
+	oldScreenY := screenY
+
+	defer func() {
+		screenX = oldScreenX
+	}()
+	defer func() {
+		screenY = oldScreenY
+	}()
+
+	screenY = height
+	screenX = 2
 	clearBanner()
 	cmd := ":"
 	for {
@@ -345,9 +378,18 @@ func command() {
 		case ESCAPE_CODE:
 			clearBanner()
 			return
+		case BACKSPACE_CODE:
+			cmd = cmd[:len(cmd)-1]
+			screenX--
+			clearBanner()
+			if screenX == 1 {
+				return
+			}
 		default:
 			cmd += string(c)
+			screenX++
 		}
+		draw()
 	}
 }
 
@@ -477,10 +519,14 @@ func scan() {
 			}
 			textX = len(currentLine.text) - 1
 		case 'A':
-			textX = len(currentLine.text)
-			setXPos()
-			screenX++
-			insert()
+			if len(currentLine.text) == 0 {
+				insert()
+			} else {
+				textX = len(currentLine.text)
+				setXPos()
+				screenX++
+				insert()
+			}
 		case 'x':
 			deleteChar(textX + 1)
 			right()
