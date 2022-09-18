@@ -88,6 +88,9 @@ func right() {
 }
 
 func up() {
+	if currentLine == nil {
+		return
+	}
 	if screenY > 1 {
 		screenY--
 		currentLine = currentLine.prev
@@ -102,7 +105,7 @@ func up() {
 }
 
 func down() {
-	if currentLine.next == nil {
+	if currentLine == nil || currentLine.next == nil {
 		return
 	}
 	if screenY < height-1 {
@@ -275,7 +278,7 @@ func setXPos() {
 	if currentLine == nil {
 		return
 	}
-	for i := 0; i < min(textX, len(currentLine.text)); i++ {
+	for i := 0; i < min(textX, len(currentLine.text)-1); i++ {
 		c := currentLine.text[i]
 		if c == '\t' {
 			screenX += 8
@@ -306,6 +309,13 @@ func scan() {
 			up()
 		case 'i':
 			insert()
+		case '$':
+			fallthrough
+		case 'E':
+			if currentLine == nil {
+				break
+			}
+			textX = len(currentLine.text) - 1
 		case 'A':
 			textX = len(currentLine.text)
 			setXPos()
