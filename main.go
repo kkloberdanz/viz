@@ -26,8 +26,9 @@ var clipboard string
 var searchTerm string
 
 const (
-	ENTER_CODE = 13
-	ESC_CODE   = 27
+	ENTER_CODE     = 13
+	ESCAPE_CODE    = 27
+	BACKSPACE_CODE = 127
 )
 
 type line struct {
@@ -150,6 +151,58 @@ func clearBanner() {
 	restore()
 }
 
+func deleteChar(pos int) {
+	txt := currentLine.text
+	if len(txt) <= 0 {
+		return
+	}
+	if pos > 0 {
+		currentLine.text = txt[:pos-1] + txt[pos:]
+	} else {
+		currentLine.text = txt[1:]
+	}
+	walkBack()
+	draw()
+}
+
+func deleteLine(line *line) {
+	prev := line.prev
+	next := line.next
+	if prev != nil {
+		prev.next = next
+	}
+	if next != nil {
+		next.prev = prev
+	}
+}
+
+func backspace() {
+	if len(currentLine.text) == 0 {
+		deleteLine(currentLine)
+		up()
+		textX = len(currentLine.text) - 1
+		setXPos()
+		draw()
+	} else if textX == 0 && currentLine.prev != top {
+		// shift line up
+		oldLine := currentLine
+		txt := currentLine.text
+		prev := currentLine.prev
+		newTextX := 0
+		if prev != nil {
+			newTextX = len(prev.text)
+			prev.text += txt
+		}
+		up()
+		deleteLine(oldLine)
+		textX = newTextX
+		setXPos()
+		draw()
+	} else if textX != 0 {
+		deleteChar(textX)
+	}
+}
+
 func insert() {
 	clearBanner()
 	flash("-- INSERT --")
@@ -160,7 +213,7 @@ func insert() {
 	for {
 		c := getchar()
 		switch c {
-		case ESC_CODE:
+		case ESCAPE_CODE:
 			walkBack()
 			return
 		case ENTER_CODE:
@@ -179,6 +232,8 @@ func insert() {
 			currentLine = newLine
 			down()
 			draw()
+		case BACKSPACE_CODE:
+			backspace()
 		default:
 			// add character to string at proper position
 			pos := textX
@@ -227,7 +282,7 @@ func search() {
 			searchTerm = term[1:]
 			executeSearch(searchTerm)
 			return
-		case ESC_CODE:
+		case ESCAPE_CODE:
 			clearBanner()
 			return
 		default:
@@ -287,7 +342,7 @@ func command() {
 		case ENTER_CODE:
 			execute(cmd[1:])
 			return
-		case ESC_CODE:
+		case ESCAPE_CODE:
 			clearBanner()
 			return
 		default:
@@ -387,7 +442,6 @@ func GHandle() {
 }
 
 func scan() {
-	// TODO: backspace
 	for {
 		if quit {
 			return
@@ -425,7 +479,11 @@ func scan() {
 		case 'A':
 			textX = len(currentLine.text)
 			setXPos()
+			screenX++
 			insert()
+		case 'x':
+			deleteChar(textX + 1)
+			right()
 		case 'n':
 			executeSearch(searchTerm)
 		case '/':
@@ -434,7 +492,7 @@ func scan() {
 			command()
 		case '0':
 			startOfLine()
-		case ESC_CODE:
+		case ESCAPE_CODE:
 			break // do nothing
 		default:
 			flash(fmt.Sprintf("unknown command: '%c'", c))
