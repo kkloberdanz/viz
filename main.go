@@ -551,6 +551,7 @@ func readFile(filename string) {
 }
 
 func main() {
+    // TODO: does not work for new files
 	defer clear()
 	if len(os.Args) > 1 {
 		filename = os.Args[1]
