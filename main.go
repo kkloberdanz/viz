@@ -8,6 +8,7 @@ import (
 	"golang.org/x/term"
 	"os"
 	"strconv"
+	"strings"
 )
 
 var screenX int = 1
@@ -22,6 +23,7 @@ var top *line
 var topOfScreen *line
 var currentLine *line
 var clipboard string
+var searchTerm string
 
 const (
 	ENTER_CODE = 13
@@ -195,6 +197,41 @@ func insert() {
 			}
 			displayLine(currentLine.text, screenY)
 			right()
+		}
+	}
+}
+
+func executeSearch(term string) {
+	if currentLine == nil {
+		return
+	}
+	i := lineno + 1
+	for line := currentLine.next; line != nil; line = line.next {
+		if strings.Contains(line.text, term) {
+			goToNumber(i + 1)
+			return
+		}
+		i++
+	}
+	flash(fmt.Sprintf("could not find '%s'", term))
+}
+
+func search() {
+	clearBanner()
+	term := "/"
+	for {
+		flash(term)
+		c := getchar()
+		switch c {
+		case ENTER_CODE:
+			searchTerm = term[1:]
+			executeSearch(searchTerm)
+			return
+		case ESC_CODE:
+			clearBanner()
+			return
+		default:
+			term += string(c)
 		}
 	}
 }
@@ -387,6 +424,10 @@ func scan() {
 			textX = len(currentLine.text)
 			setXPos()
 			insert()
+		case 'n':
+			executeSearch(searchTerm)
+		case '/':
+			search()
 		case ':':
 			command()
 		case '0':
