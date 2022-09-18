@@ -251,6 +251,9 @@ func insert() {
 					txt[pos:],
 				)
 			}
+			if c == '\t' {
+				screenX += 7
+			}
 			displayLine(currentLine.text, screenY)
 			right()
 		}
@@ -414,7 +417,13 @@ func displayLine(line string, y int) {
 	move(1, y)
 	fmt.Print("                                                           ")
 	move(1, y)
-	fmt.Print(line)
+	for _, c := range line {
+		if c == '\t' {
+			fmt.Print("        ")
+		} else {
+			fmt.Printf("%c", c)
+		}
+	}
 	restore()
 }
 
@@ -529,7 +538,11 @@ func scan() {
 				screenX++
 				insert()
 			}
+		case 'D':
+			clipboard = currentLine.text
+			currentLine.text = currentLine.text[:textX]
 		case 'x':
+			clipboard = currentLine.text
 			deleteChar(textX + 1)
 			right()
 		case 'n':
