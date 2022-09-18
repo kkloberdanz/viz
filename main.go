@@ -7,6 +7,7 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 	"golang.org/x/term"
 	"os"
+	"strconv"
 )
 
 var screenX int = 1
@@ -194,15 +195,42 @@ func insert() {
 	}
 }
 
+func abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
+
+func goToNumber(gotoNum int) {
+	linesAway := gotoNum - lineno - 1
+	if linesAway > 0 {
+		for i := 0; i < linesAway; i++ {
+			down()
+		}
+	} else if linesAway < 0 {
+		for i := 0; i < abs(linesAway); i++ {
+			up()
+		}
+	}
+}
+
 func execute(cmd string) {
-	for _, c := range cmd[1:] {
+	// is it a number?
+	if gotoNum, err := strconv.Atoi(cmd); err == nil {
+		goToNumber(gotoNum)
+		return
+	}
+
+	// execute each letter command
+	for _, c := range cmd {
 		switch c {
 		case 'w':
 			writeFile()
 		case 'q':
 			quit = true
 		default:
-			flash(fmt.Sprintf("unknown command: '%c'", c))
+			flash(fmt.Sprintf(": unknown command: '%c'", c))
 			return
 		}
 	}
@@ -216,7 +244,7 @@ func command() {
 		c := getchar()
 		switch c {
 		case ENTER_CODE:
-			execute(cmd)
+			execute(cmd[1:])
 			return
 		case ESC_CODE:
 			clearBanner()
