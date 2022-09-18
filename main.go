@@ -530,6 +530,11 @@ func eventLoop() error {
 func readFile(filename string) {
 	readFile, err := os.Open(filename)
 	if err != nil {
+		top = lineNew()
+		currentLine = lineNew()
+		top.next = currentLine
+		currentLine.prev = top
+		topOfScreen = top
 		return // file does not exist, so we'll create a new one
 	}
 	defer readFile.Close()
@@ -551,7 +556,6 @@ func readFile(filename string) {
 }
 
 func main() {
-    // TODO: does not work for new files
 	defer clear()
 	if len(os.Args) > 1 {
 		filename = os.Args[1]
