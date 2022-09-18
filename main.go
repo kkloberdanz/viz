@@ -205,7 +205,8 @@ func backspace() {
 }
 
 func insert() {
-	clearBanner()
+	clear()
+	draw()
 	flash("-- INSERT --")
 	defer clearBanner()
 
@@ -232,6 +233,7 @@ func insert() {
 			currentLine.prev = newLine
 			currentLine = newLine
 			down()
+			clear()
 			draw()
 		case BACKSPACE_CODE:
 			backspace()
@@ -401,7 +403,7 @@ func command() {
 func writeFile() {
 	file, err := os.Create(filename)
 	if err != nil {
-		flash(fmt.Sprintf("failed to write: \"%s\": %v", filename, err))
+		flash(fmt.Sprintf("failed to write: '%s': %v", filename, err))
 		return
 	}
 	defer file.Close()
@@ -538,6 +540,16 @@ func scan() {
 				screenX++
 				insert()
 			}
+		case 'r':
+			clipboard = currentLine.text
+			char := getchar()
+			txt := currentLine.text
+			currentLine.text = fmt.Sprintf(
+				"%s%c%s",
+				txt[:textX],
+				char,
+				txt[textX+1:],
+			)
 		case 'D':
 			clipboard = currentLine.text
 			currentLine.text = currentLine.text[:textX]
