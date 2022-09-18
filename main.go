@@ -21,6 +21,7 @@ var filename string
 var top *line
 var topOfScreen *line
 var currentLine *line
+var clipboard string
 
 const (
 	ENTER_CODE = 13
@@ -151,6 +152,9 @@ func insert() {
 	clearBanner()
 	flash("-- INSERT --")
 	defer clearBanner()
+
+	clipboard = currentLine.text
+
 	for {
 		c := getchar()
 		switch c {
@@ -317,11 +321,13 @@ func setXPos() {
 }
 
 func goToTop() {
+	clear()
 	currentLine = top.next
 	topOfScreen = top
 	screenX = 1
 	screenY = 1
 	textX = 0
+	lineno = 0
 	move(screenX, screenY)
 	draw()
 	restore()
@@ -362,6 +368,8 @@ func scan() {
 			down()
 		case 'k':
 			up()
+		case 'u':
+			currentLine.text = clipboard
 		case 'i':
 			insert()
 		case 'g':
