@@ -288,6 +288,33 @@ func setXPos() {
 	}
 }
 
+func goToTop() {
+	currentLine = top.next
+	topOfScreen = top
+	screenX = 1
+	screenY = 1
+	textX = 0
+	move(screenX, screenY)
+	draw()
+	restore()
+}
+
+func gHandle() {
+	c := getchar()
+	switch c {
+	case 'g':
+		goToTop()
+	default:
+		flash(fmt.Sprintf("unknown command 'g%c'", c))
+	}
+}
+
+func GHandle() {
+	for line := currentLine; line.next != nil; line = line.next {
+		down()
+	}
+}
+
 func scan() {
 	for {
 		if quit {
@@ -309,6 +336,10 @@ func scan() {
 			up()
 		case 'i':
 			insert()
+		case 'g':
+			gHandle()
+		case 'G':
+			GHandle()
 		case '$':
 			fallthrough
 		case 'E':
