@@ -136,7 +136,7 @@ func displayLineno() {
 	move(50, height)
 	fmt.Print("            ")
 	move(50, height)
-	fmt.Printf("%d - %d", 1+textX, 1+lineno)
+	fmt.Printf("%d - %d", screenX, 1+lineno)
 	restore()
 }
 
@@ -147,7 +147,7 @@ func flash(msg string) {
 }
 
 func clearBanner() {
-	flash("                                                               ")
+	flash("                                                              ")
 	restore()
 }
 
@@ -162,6 +162,7 @@ func deleteChar(pos int) {
 		currentLine.text = txt[1:]
 	}
 	walkBack()
+	clear()
 	draw()
 }
 
@@ -347,6 +348,7 @@ func execute(cmd string) {
 		case 'q':
 			quit = true
 		default:
+			clearBanner()
 			flash(fmt.Sprintf(": unknown command: '%c'", c))
 			return
 		}
