@@ -493,6 +493,7 @@ func readFile(filename string) {
 }
 
 func main() {
+	defer clear()
 	if len(os.Args) > 1 {
 		filename = os.Args[1]
 		readFile(filename)
