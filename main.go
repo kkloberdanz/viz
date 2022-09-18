@@ -387,6 +387,7 @@ func GHandle() {
 }
 
 func scan() {
+	// TODO: backspace
 	for {
 		if quit {
 			return
@@ -407,6 +408,7 @@ func scan() {
 			up()
 		case 'u':
 			currentLine.text = clipboard
+			startOfLine()
 		case 'i':
 			insert()
 		case 'g':
