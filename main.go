@@ -496,6 +496,39 @@ func GHandle() {
 	}
 }
 
+func dHandle() {
+	for {
+		c := getchar()
+		switch c {
+		case 'd':
+			clipboard = currentLine.text
+			oldLine := currentLine
+			up()
+			deleteLine(oldLine)
+			clear()
+			draw()
+			return
+		default:
+			flash(fmt.Sprintf("unknown command: 'd%c'", c))
+			return
+		}
+	}
+}
+
+func yHandle() {
+	for {
+		c := getchar()
+		switch c {
+		case 'y':
+			clipboard = currentLine.text
+			return
+		default:
+			flash(fmt.Sprintf("unknown command: 'y%c'", c))
+			return
+		}
+	}
+}
+
 func scan() {
 	for {
 		if quit {
@@ -540,6 +573,16 @@ func scan() {
 				screenX++
 				insert()
 			}
+		case 'o':
+			newline := lineNew()
+			newline.prev = currentLine
+			newline.next = currentLine.next
+			currentLine.next = newline
+			down()
+			startOfLine()
+			clear()
+			draw()
+			insert()
 		case 'r':
 			clipboard = currentLine.text
 			char := getchar()
@@ -550,6 +593,18 @@ func scan() {
 				char,
 				txt[textX+1:],
 			)
+		case 'p':
+			oldNext := currentLine.next
+			newline := lineNew()
+			newline.text = clipboard
+			newline.prev = currentLine
+			newline.next = oldNext
+			oldNext.prev = newline
+			currentLine.next = newline
+		case 'y':
+			yHandle()
+		case 'd':
+			dHandle()
 		case 'D':
 			clipboard = currentLine.text
 			currentLine.text = currentLine.text[:textX]
