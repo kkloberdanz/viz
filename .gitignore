@@ -1,3 +1,4 @@
 *.sw?
 viz
 hello.txt
+viz-*
