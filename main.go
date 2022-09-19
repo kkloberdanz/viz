@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/ahmetalpbalkan/go-cursor"
-	"golang.org/x/crypto/ssh/terminal"
 	"golang.org/x/term"
 	"os"
 	"strconv"
@@ -15,7 +14,6 @@ var screenX int = 1
 var screenY int = 1
 var textX int = 0
 var lineno int = 0
-var width int = 0
 var height int = 0
 var quit bool = false
 var filename string
@@ -662,7 +660,7 @@ func scan() {
 func eventLoop() error {
 	var err error
 
-	width, height, err = terminal.GetSize(0)
+	_, height, err = term.GetSize(0)
 	if err != nil {
 		return err
 	}
