@@ -685,14 +685,17 @@ func eventLoop() error {
 	return nil
 }
 
+func initialSetup() {
+	top = lineNew()
+	currentLine = lineNew()
+	top.next = currentLine
+	currentLine.prev = top
+	topOfScreen = top
+}
+
 func readFile(filename string) {
 	readFile, err := os.Open(filename)
 	if err != nil {
-		top = lineNew()
-		currentLine = lineNew()
-		top.next = currentLine
-		currentLine.prev = top
-		topOfScreen = top
 		return // file does not exist, so we'll create a new one
 	}
 	defer readFile.Close()
@@ -715,6 +718,7 @@ func readFile(filename string) {
 
 func main() {
 	defer clear()
+	initialSetup()
 	if len(os.Args) > 1 {
 		filename = os.Args[1]
 		readFile(filename)
