@@ -62,7 +62,7 @@ func clear() {
 
 func getchar() byte {
 	var b []byte = make([]byte, 1)
-	os.Stdin.Read(b)
+	os.Stdin.Read(b) //nolint
 	return b[0]
 }
 
@@ -407,8 +407,8 @@ func writeFile() {
 	defer file.Close()
 
 	for line := top.next; line != nil; line = line.next {
-		file.Write([]byte(line.text))
-		file.Write([]byte("\n"))
+		file.Write([]byte(line.text)) //nolint
+		file.Write([]byte("\n"))      //nolint
 	}
 	flash(fmt.Sprintf("wrote file: \"%s\"", filename))
 }
@@ -669,13 +669,13 @@ func eventLoop() error {
 	if err != nil {
 		return err
 	}
-	defer term.Restore(int(os.Stdin.Fd()), oldIn)
+	defer term.Restore(int(os.Stdin.Fd()), oldIn) //nolint
 
 	oldOut, err := term.MakeRaw(int(os.Stdout.Fd()))
 	if err != nil {
 		return err
 	}
-	defer term.Restore(int(os.Stdout.Fd()), oldOut)
+	defer term.Restore(int(os.Stdout.Fd()), oldOut) //nolint
 
 	clear()
 	move(screenX, screenY)
