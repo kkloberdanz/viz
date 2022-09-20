@@ -131,6 +131,7 @@ func startOfLine() {
 	screenX = 1
 	textX = 0
 	restore()
+	draw()
 }
 
 func displayLineno() {
