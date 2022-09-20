@@ -554,6 +554,39 @@ func yHandle() {
 	}
 }
 
+func wHandle() {
+	txt := currentLine.text
+	if len(txt) == 0 {
+		down()
+		return
+	}
+	ch := txt[textX]
+	if ch == ' ' || ch == '\t' {
+		for _, char := range txt[textX:] {
+			right()
+			if char != ' ' && char != '\t' {
+				break
+			}
+			if textX >= len(txt)-1 || len(txt) == 0 {
+				down()
+				startOfLine()
+			}
+		}
+		left()
+	} else {
+		for _, char := range txt[textX:] {
+			right()
+			if char == ' ' || char == '\t' {
+				break
+			}
+			if textX >= len(txt)-1 || len(txt) == 0 {
+				down()
+				startOfLine()
+			}
+		}
+	}
+}
+
 func scan() {
 	draw()
 	for {
@@ -619,35 +652,7 @@ func scan() {
 				txt[textX+1:],
 			)
 		case 'w':
-			if len(currentLine.text) == 0 {
-				down()
-				break
-			}
-			ch := currentLine.text[textX]
-			if ch == ' ' || ch == '\t' {
-				for _, char := range currentLine.text[textX:] {
-					right()
-					if char != ' ' && char != '\t' {
-						break
-					}
-					if textX >= len(currentLine.text)-1 || len(currentLine.text) == 0 {
-						down()
-						startOfLine()
-					}
-				}
-				left()
-			} else {
-				for _, char := range currentLine.text[textX:] {
-					right()
-					if char == ' ' || char == '\t' {
-						break
-					}
-					if textX >= len(currentLine.text)-1 || len(currentLine.text) == 0 {
-						down()
-						startOfLine()
-					}
-				}
-			}
+			wHandle()
 		case 'p':
 			oldNext := currentLine.next
 			newline := lineNew()
