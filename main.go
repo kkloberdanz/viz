@@ -104,6 +104,7 @@ func up() {
 		topOfScreen = topOfScreen.prev
 		currentLine = currentLine.prev
 		lineno--
+		draw()
 	}
 	restore()
 }
@@ -121,6 +122,7 @@ func down() {
 		topOfScreen = topOfScreen.next
 		currentLine = currentLine.next
 		lineno++
+		draw()
 	}
 	restore()
 }
@@ -552,11 +554,11 @@ func yHandle() {
 }
 
 func scan() {
+	draw()
 	for {
 		if quit {
 			return
 		}
-		draw()
 		displayLineno()
 
 		c := getchar()
