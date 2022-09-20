@@ -15,6 +15,7 @@ var screenY int = 1
 var textX int = 0
 var lineno int = 0
 var height int = 0
+var width int = 0
 var quit bool = false
 var filename string
 var top *line
@@ -131,9 +132,9 @@ func startOfLine() {
 }
 
 func displayLineno() {
-	move(50, height)
+	move(60, height)
 	fmt.Print("            ")
-	move(50, height)
+	move(60, height)
 	fmt.Printf("%d - %d", screenX, 1+lineno)
 	restore()
 }
@@ -271,6 +272,26 @@ func executeSearch(term string) {
 			return
 		}
 		i++
+	}
+	flash(fmt.Sprintf("could not find '%s'", term))
+}
+
+func executeReverseSearch(term string) {
+	if currentLine == nil {
+		return
+	}
+
+	i := lineno
+	for line := currentLine.prev; line != nil; line = line.prev {
+		if i <= 0 {
+			flash(fmt.Sprintf("could not find '%s'", term))
+			break
+		}
+		if strings.Contains(line.text, term) {
+			goToNumber(i)
+			return
+		}
+		i--
 	}
 	flash(fmt.Sprintf("could not find '%s'", term))
 }
@@ -417,7 +438,10 @@ func displayLine(line string, y int) {
 	move(1, y)
 	fmt.Print("                                                           ")
 	move(1, y)
-	for _, c := range line {
+	for i, c := range line {
+		if i == width {
+			break
+		}
 		if c == '\t' {
 			fmt.Print("        ")
 		} else {
@@ -642,6 +666,8 @@ func scan() {
 			right()
 		case 'n':
 			executeSearch(searchTerm)
+		case 'N':
+			executeReverseSearch(searchTerm)
 		case '/':
 			search()
 		case ':':
@@ -660,7 +686,7 @@ func scan() {
 func eventLoop() error {
 	var err error
 
-	_, height, err = term.GetSize(0)
+	width, height, err = term.GetSize(0)
 	if err != nil {
 		return err
 	}
@@ -715,8 +741,8 @@ func readFile(filename string) {
 }
 
 func main() {
-	defer clear()
 	initialSetup()
+	defer clear()
 	if len(os.Args) > 1 {
 		filename = os.Args[1]
 		readFile(filename)
