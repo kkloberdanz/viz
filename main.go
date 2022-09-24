@@ -3,11 +3,12 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/ahmetalpbalkan/go-cursor"
-	"golang.org/x/term"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/ahmetalpbalkan/go-cursor"
+	"golang.org/x/term"
 )
 
 var screenX int = 1
@@ -221,8 +222,12 @@ func insert() {
 			walkBack()
 			return
 		case ENTER_CODE:
-			prevText := currentLine.text[textX:]
-			nextText := currentLine.text[:textX]
+			prevText := currentLine.text
+			var nextText string
+			if len(currentLine.text) >= textX {
+				prevText = currentLine.text[textX:]
+				nextText = currentLine.text[:textX]
+			}
 			startOfLine()
 
 			newLine := lineNew()
